@@ -1,53 +1,60 @@
 class GildedRose
+  attr_reader :special_items
 
   def initialize(items)
     @items = items
+    @special_items = [
+      { name: "Aged Brie", decay_rate: -1 },
+      { name: "Sulfuras", decay_rate: 0 },
+      { name: "Backstage passes", decay_rate: -1 },
+      { name: "Conjured", decay_rate: 2 }
+    ]
+
+    create_methods
   end
 
-  def update_quality()
+  def create_methods
+    @special_items.each do |special_item|
+      self.class.send(:define_method, "process_#{special_item[:name].downcase.gsub(" ","_")}") do |item, special_item|
+        if special_item[:name] == "Backstage passes"
+          case
+          when item.sell_in <= 10 && item.sell_in > 5
+            special_item[:decay_rate] = -2
+          when item.sell_in <= 5 && item.sell_in > 0
+            special_item[:decay_rate] = -3
+          when item.sell_in <= 0
+            special_item[:decay_rate] = item.quality
+          end
+        end
+
+        decrease_quality(item, special_item)
+        decrease_sell_in(item, special_item)
+      end
+    end
+  end
+
+  def decrease_quality(item, special_item)
+    unless special_item[:decay_rate] < 0 && item.quality > 49 # never increase quality to more than 50
+      item.quality = item.quality - special_item[:decay_rate] if item.quality > 0
+    end
+  end
+
+  def decrease_sell_in(item, special_item)
+    item.sell_in = item.sell_in - 1 if special_item[:name] != "Sulfuras"
+    decrease_quality(item, special_item) if item.sell_in < 0 # degrade twice as fast after sell_in
+  end
+
+  def update_quality
     @items.each do |item|
-      if item.name != "Aged Brie" and item.name != "Backstage passes to a TAFKAL80ETC concert"
-        if item.quality > 0
-          if item.name != "Sulfuras, Hand of Ragnaros"
-            item.quality = item.quality - 1
-          end
-        end
-      else
-        if item.quality < 50
-          item.quality = item.quality + 1
-          if item.name == "Backstage passes to a TAFKAL80ETC concert"
-            if item.sell_in < 11
-              if item.quality < 50
-                item.quality = item.quality + 1
-              end
-            end
-            if item.sell_in < 6
-              if item.quality < 50
-                item.quality = item.quality + 1
-              end
-            end
-          end
+      matches = @special_items.map do |special_item|
+        if item.name.include?(special_item[:name])
+          send("process_#{special_item[:name].downcase.gsub(" ", "_")}".to_sym, item, special_item)
+          return true
         end
       end
-      if item.name != "Sulfuras, Hand of Ragnaros"
-        item.sell_in = item.sell_in - 1
-      end
-      if item.sell_in < 0
-        if item.name != "Aged Brie"
-          if item.name != "Backstage passes to a TAFKAL80ETC concert"
-            if item.quality > 0
-              if item.name != "Sulfuras, Hand of Ragnaros"
-                item.quality = item.quality - 1
-              end
-            end
-          else
-            item.quality = item.quality - item.quality
-          end
-        else
-          if item.quality < 50
-            item.quality = item.quality + 1
-          end
-        end
+      if !matches.include?(true)
+        decrease_quality(item, {name: "Normal Item", decay_rate: 1})
+        decrease_sell_in(item, {name: "Normal Item", decay_rate: 1})
       end
     end
   end
