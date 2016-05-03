@@ -18,9 +18,9 @@ class GildedRose
       self.class.send(:define_method, "process_#{special_item[:name].downcase.gsub(" ","_")}") do |item, special_item|
         if special_item[:name] == "Backstage passes"
           case
-          when item.sell_in <= 10 && item.sell_in > 5
+          when item.sell_in.between?(6,10)
             special_item[:decay_rate] = -2
-          when item.sell_in <= 5 && item.sell_in > 0
+          when item.sell_in.between?(1,5)
             special_item[:decay_rate] = -3
           when item.sell_in <= 0
             special_item[:decay_rate] = item.quality
