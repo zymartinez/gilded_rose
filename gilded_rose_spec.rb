@@ -14,6 +14,15 @@ Rspec.describe GildedRose do
       it "decreases the sell_in by 1" do
         expect(item.sell_in).to eq(0)
       end
+
+      context "and sell_in has passed" do
+        it "decreases the quality twice as fast" do
+          item.quality = 4
+          item.sell_in = 0
+          gilded_rose.update_quality
+          expect(item.quality).to eq(2)
+        end
+      end
     end
 
     context "when item is Aged Brie" do
@@ -35,6 +44,15 @@ Rspec.describe GildedRose do
       it "decreases the sell_in by 1" do
         expect(item.sell_in).to eq(0)
       end
+
+      context "and sell_in has passed" do
+        it "increases the quality twice as fast" do
+          item.quality = 4
+          item.sell_in = 0
+          gilded_rose.update_quality
+          expect(item.quality).to eq(6)
+        end
+      end
     end
 
     context "when item is Sulfuras" do
@@ -48,6 +66,15 @@ Rspec.describe GildedRose do
 
       it "does not decrease sell_in" do
         expect(item.sell_in).to eq(1)
+      end
+
+      context "and sell_in has passed" do
+        it "does not decrease quality" do
+          item.quality = 4
+          item.sell_in = 0
+          gilded_rose.update_quality
+          expect(item.quality).to eq(4)
+        end
       end
     end
 
@@ -93,6 +120,11 @@ Rspec.describe GildedRose do
         it "decreases the sell_in by 1" do
           expect(item.sell_in).to eq(-1)
         end
+
+        it "does not allow quality to be negative" do
+          gilded_rose.update_quality
+          expect(item.quality).to eq(0)
+        end
       end
     end
 
@@ -107,6 +139,15 @@ Rspec.describe GildedRose do
 
       it "decreases the sell_in by 1" do
         expect(item.sell_in).to eq(9)
+      end
+
+      context "and sell_in has passed" do
+        it "decreases the quality four times as fast" do
+          item.quality = 4
+          item.sell_in = 0
+          gilded_rose.update_quality
+          expect(item.quality).to eq(0)
+        end
       end
     end
 
